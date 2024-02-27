@@ -39,6 +39,10 @@ Although, technically you can buffer data with unprojected coordinate reference 
 
 ```{r buffer, eval=FALSE}
 # Create dataframe with lat long data
+
+library(raster)
+library(sf)
+
 df <- data.frame(place = c("Aarhus Domkirke", 
                            "Christianskirken",
                            "Nobelparken"),
@@ -47,28 +51,28 @@ df <- data.frame(place = c("Aarhus Domkirke",
 
 
 # Convert the data frame to an sf object             
-df_sf <- ___(df, coords = c("longitude", "latitude"), ___)
+df_sf <- st_as_sf(df, coords = c("longitude", "latitude"), crs=4326)
 
 # Transform the points to match the shelters' CRS EPSG 25832
 df_crs <- st_transform(df_sf, crs = 25832)
 
 # Buffer the points
-df_buf <- _____(df_crs, dist = 500)
+df_buf <- st_buffer(df_crs, dist = 500)
 
 # Load shelters and buffer them by 500m
-shelters <- 
-shelters_buf <- _____(shelters, _____)
+shelters <- st_read("../data/shelters.json")
+shelters_buf <- st_buffer(shelters, dist = 500)
 
 
 # Load the aarhus image
-
+aarhus_img <- brick("../data/Aarhus_1m.TIF")
 
 # Plot the shelters and buffers, aarhus image and points and their buffers
-_____(______(shelters_buf), col = "green")
-_____(_______(shelters), pch = 2 ,add = TRUE)
-_____(aarhus, stretch = "lin",add = TRUE)
-_____(______(df_buf), col = "firebrick",add = TRUE)
-_____(______(df_crs), pch = 16, add = TRUE)
+plot(st_geometry(shelters_buf), col = "green")
+plot(st_geometry(shelters), pch = 2 ,add = TRUE)
+plotRGB(aarhus_img, stretch = "lin",add = TRUE)
+plot(st_geometry(df_buf), col = "firebrick",add = TRUE)
+plot(st_geometry(df_crs), pch = 16, add = TRUE)
 
 ```
 
@@ -89,17 +93,19 @@ Also similar to buffering, centroid calculations should generally be performed o
 
 ```{r centroids, eval=FALSE}
 # Read in the municipality shapefile
-municipalities <- ___
+municipalities <- getData("GADM", country = "DNK", level = 2)
 
 # Convert municipalities to sf object and project to epsg 25832
-municipalities_25832 <- ___(__________(municipalities), crs = _____)
+municipalities_25832 <- municipalities %>%
+  st_as_sf() %>% 
+    st_transform(crs=25832)
 
 # Compute the municipality centroids
-centroids <- ___(municipalities_25832)
+centroids <- st_centroid(municipalities_25832)
 
 # Plot the municipality geometry
-plot(___(municipalities_25832), col = "grey", border = "white")
-plot(centroids, pch = 16, col = "firebrick", ___ = ___)
+plot(st_geometry(municipalities_25832), col = "grey", border = "white")
+plot(centroids, pch = 16, col = "firebrick", add = TRUE)
 ```
 
 
@@ -123,23 +129,23 @@ In the `sf` package, there is a function for extracting the bounding box coordin
 
 ```{r Ar-box, eval= FALSE}
 # Filter out the Aarhus kommune from the municipalities sf object
-aarhus_mun <- _______________ %>% 
-  filter(____________)
+aarhus_mun <- municipalities_25832 %>% 
+  dplyr::filter(NAME_2 == "Århus")
 
 # Plot the aarhus municipality and the shelters
-plot(_______(aarhus_mun), col = "grey", border = "white")
-plot(________, add = TRUE, pch = 16, col = "forestgreen")
+plot(st_geometry(aarhus_mun), col = "grey", border = "white")
+plot(shelters, add = TRUE, pch = 16, col = "forestgreen")
 
 # Compute the coordinates of the bounding box
-_________(aarhus_mun)
+st_bbox(aarhus_mun)
 
 # Create a bounding box polygon
-aarhus_box <- __________(aarhus_mun, n = ______)
+aarhus_box <- st_make_grid(aarhus_mun, n = 1)
 
 # Plot all the DK municipalities, add the shelters and the new box outlining the Aarhus municipality
 plot(st_geometry(municipalities_25832), col = "grey", border = "white")
-plot(________, _________, pch = 16, col = "forestgreen")
-plot(________, _________)
+plot(shelters, pch = 16, col = "forestgreen", add = TRUE)
+plot(aarhus_box, add = TRUE)
 ```
 
 
