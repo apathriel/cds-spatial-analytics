@@ -169,30 +169,29 @@ With polygons, `st_union()` will dissolve all the polygons into a single polygon
 
 ```{r shelter-buffers, eval=FALSE}
 # Buffer the shelters by 500m after projecting the object to crs
-all.equal(___________,________)
+# same crs
+all.equal(shelters,municipalities_25832)
 
 sh_buffer <- shelters %>% 
-  # project to Aarhus municipality CRS if different
-  ___________(crs = ________) %>% 
-  st_buffer(______)
+  st_buffer(dist = 500)
 
 # Limit the object to just geometry
-sh_buffers <- _________(sh_buffer)
+sh_buffers <- st_geometry(sh_buffer)
 
 # Compute the number of features in sh_buffer
-________(sh_buffers)
+length(sh_buffers)
 
 # Plot the shelter buffers
-_____(sh_buffers)
+plot(sh_buffers)
 
 # Dissolve the buffers
-sh_buf_union <- __________(sh_buffers)
+sh_buf_union <- st_union(sh_buffers)
 
 # Compute the number of features in sh_buf_union
-________(sh_buf_union)
+length(sh_buf_union)
 
 # Plot the dissolved buffers
-______(sh_buf_union)
+plot(sh_buf_union)
 
 ```
 
@@ -213,24 +212,24 @@ A more precise bounding polygon is sometimes needed, one that fits your data mor
 
 ```{r convexhull, eval=FALSE}
 # Look at the data frame to see the type of geometry
-___(shelters)
+head(shelters)
 
 # Convert the points to a single multi-point
-sh1 <- ___(shelters)
+sh1 <- st_union(shelters)
 
 # Look at the data frame to see the type of geometry
-___(sh1)
+head(sh1)
 
 # Confirm that we went from 17 features to 1 feature
-___(shelters)
-___(sh1)
+length(shelters)
+length(sh1)
 
 # Compute the tight bounding box
-shelters_hull <- ___(sh1)
+shelters_hull <- st_convex_hull(sh1)
 
 # Plot the points together with the hull
 plot(shelters_hull, col = "red")
-plot(sh1, ___ = ___)
+plot(sh1, add = TRUE)
 ```
 
 
