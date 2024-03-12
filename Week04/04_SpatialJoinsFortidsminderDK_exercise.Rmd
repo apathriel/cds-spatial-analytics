@@ -111,7 +111,7 @@ most_viking <- viking_neigh %>%
   slice(1:5)
   
 # Plot the municipalities with fewest Viking finds in red over DK municipalities
-plot(least, col = "grey", border = "white")
+plot(st_geometry(municipalities_25832), col = "grey", border = "white")
 plot(municipalities_25832[st_intersects(st_join(least, municipalities_25832, sparse = FALSE))]$geometry, col = "red", add = T) 
 
 ```
@@ -142,39 +142,40 @@ A note about the output of functions that test relationships between two sets of
 ```{r intersect, eval=FALSE}
 # Load objects
 parks <- read_sf("../data/parks.shp")
-viking
+
 
 
 # Create a 10km buffer around Nobelparken (see Week 03 Task 01 for guidance) 
-nb <- data.frame(________, _________, ________)
+nb <- data.frame(place="Nobelparken", longitude=10.2033485, latitude=56.174346)
 
-nb_buf <- nb %>% 
-  st_as_sf(________________, crs = _____) %>% 
-  ______________ %>% 
+nb_sf <- st_as_sf(nb, coords = c("longitude", "latitude"), crs = 4326)
+
+nb_buf <- nb_sf %>% 
+  st_transform(25832) %>% 
   st_buffer(10000)
 
 
 # Check consistent projection among the objects
-________==_________
-________==_________
+st_crs(nb_buf) == st_crs(parks)
+st_crs(nb_buf)==st_crs(viking)
 
 # Identify viking monuments that intersect with the buffer
-viking_int <- ___(nb_buf, viking)
+viking_int <- st_intersects(nb_buf, viking)
 
 # Identify parks contained by the buffer
-parks_cont <- ___(nb_buf, parks)
+parks_cont <- st_contains(nb_buf, parks)
 
 # Get the indexes of the viking monuments and parks contained by the buffer. You are extracting the first element of each list.
-int <- viking_int[[___]]
-cont <- parks_cont[[___]]
+int <- viking_int[[1]]
+cont <- parks_cont[[1]]
 
 # Get the IDs or codes of the viking and parks in buffer
-viking$stednavn[____]
-parks$navn[___]
+viking$stednavn[int]
+parks$navn[cont]
 
 # Clip the viking monuments and parks layers by the buffer (ignore the warning)
-viking_clip <- ___
-parks_clip <- ___
+viking_clip <- st_intersection(viking, nb_buf)
+parks_clip <- st_intersection(parks, nb_buf)
 
 # Plot the geometry of the clipped viking monuments
 plot(nb_buf$geometry, border = "blue")
@@ -207,25 +208,29 @@ In this exercise you'll measure the distance from the Nobelparken to the viking 
 
 ```{r nearest, eval=FALSE}
 # Create the nobel object and transform to planar CRS
-nobel <- ___(___)
+nobel <-st_centroid(nb_buf)
 
 # Test whether the CRS match
-___(viking_clip) == ___(nobel)
+st_crs(viking_clip) == st_crs(nobel)
 
 # Compute the distance between the Nobelparken and the clipped viking monuments
-d <- ________(___________, nobel)
+d <- st_distance(viking_clip, nobel)
 
 # Take a quick look at the result
-________(d)
+View(d)
 
 # Find the index of the 10 nearest viking monuments
 sorted <- sort(d) # sort monuments by proximity
-nearest10index <- which ( __________) # which distances are smaller than the 10th smallest distance
+nearest10index <- which ( d <= sorted[10]) # which distances are smaller than the 10th smallest distance
 
 # Identify the viking monuments that are the nearest, what kinds of monuments are they?
-viking_clip[_________,]$anlaegsbet
+viking_clip[nearest10index,]$anlaegsbet
 
 # Plot the results
+plot(nb_buf$geometry, border = "blue")
+plot(st_geometry(viking_clip[nearest10index,]), col = "red", add = TRUE, pch = 19)
+
+
 ```
 
 Nice work! If you look at the result for the last line of code carefully you'll see that the closest viking monument is Befæstning at 1580m. In this case one of our feature sets was a single feature. You may end up applying this function in situations where there are multiple features in both objects. In this situation `sf` will return a matrix. Distance matrices take long time to calculate and so sometimes you calculate distance between the nearest two features from two different datasets. That will be the homework :)
@@ -247,7 +252,7 @@ Let us now recap some of the functionality we have learnt in the previous two we
 
 ```{r}
 # /Start Code/ #
-
+library(tmap)
 
 # /End Code/ #
 ```
