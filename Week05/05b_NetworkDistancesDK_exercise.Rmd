@@ -56,7 +56,6 @@ All features in mapboxapi require a valid Mapbox access token to work. Now that 
 ```{r mapbox-auth, eval = FALSE}
 # either paste it in directly, or in a txt file that you store locally and "ignore"
 my_token <- "pk.eyJ1IjoiYXBhdGhyaWVsIiwiYSI6ImNsdG5sNjYybzA3bDcycnA4bDh4cHZkOG4ifQ.lslHySslLZ241pLIWH8B4A"
-my_token <- read_file("mytoken.txt")
 
 library(mapboxapi)
 mb_access_token(my_token, install = TRUE, overwrite = TRUE)
