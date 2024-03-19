@@ -75,13 +75,13 @@ distHaversine(my_points)  # result is in meters
 Probably the fastest of the three approaches and performs relatively well for distances above 1 arc minute.  Has precision of 15 digits.
 ```{r lcos}
 # Calculate Law of Cosines distance
-distCosine(my_points)  
+distCosine(my_points)
 ```
 
 ### Meeus distance
 ```{r meeus}
  # Calculate Meeus distance
-distMeeus(my_points)                        
+distMeeus(my_points)                       
 ```
 
 ### Rhumb line
@@ -89,14 +89,14 @@ distMeeus(my_points)
 A ‘rhumb line’ (or loxodrome) is a path of constant bearing, which crosses all meridians at the same angle.
 Sailors used to (and sometimes still) navigate along rhumb lines since it is easier to follow a constant compass bearing than to be continually adjusting the bearing, as you need to do to follow a great circle route. Rhumb lines are straight lines on a Mercator Projection map (also helpful for navigation).
 ```{r rhumb}
-distRhumb(my_points)  
+distRhumb(my_points)
 ```
 
 ### Vincenty ellipsoid distance
 ..gets the highest precision approach for exact (highly precise) coordinates. It is an iterative approach that takes substantially more computation time than the former methods, and has a precision up to 0.5 mm. If you are measuring the movement of continents, this is the one to use.
 ```{r vinc}
 # Calculate Vincenty sphere distance
-distVincentySphere(my_points) 
+distVincentySphere(my_points)
 # Calculate Vincenty ellipsoid distance
 distVincentyEllipsoid(my_points) 
 ?distVincentyEllipsoid
@@ -159,10 +159,10 @@ points_32632 <- points %>%
 
 
 # calculate the Euclidian distance
-euc_dist <- st_distance(points_4326[1,], points_4326[2,])
+euc_dist <- st_distance(points_32632[1,], points_32632[2,])
 
 # calculate geodetic distance
-geo_dist <- st_distance(points_32632[1,],points_32632[2,])
+geo_dist <- st_distance(points_4326[1,],points_4326[2,])
 
 # difference
 euc_dist-geo_dist 

@@ -39,7 +39,7 @@ Number of households without cars are available via Danmark Statistik via the  "
 * Load the dataset
 * rename the V3 and V4 column to nc2020 and nc2021. (In the provided dataset the numeric columns are number of carless households in year 2020 and in 2021
 ```{r more-data, eval = FALSE}
-no_cars <- read.csv("../data/no_cars.csv", header = FALSE)
+no_cars <- read.csv("../data/no_cars.csv", header = FALSE, fileEncoding="windows-1252")
 colnames(no_cars) <- c("field_01","municipality","nc2020", "nc2021") 
 ```
 
@@ -61,12 +61,12 @@ Create a simple feature or spatial polygons dataset that contains information on
 library(tidyverse)
 
 # load household data
-hh <- read.csv2("households2020_2021.csv", header = FALSE, fileEncoding="windows_1252")
+hh <- read.csv2("households2020_2021.csv", header = FALSE, fileEncoding="windows-1252")
 
 # create a summary of households per municipality
 hh_mun <- hh %>% 
-  group_by(_____) %>% 
-  summarize(sum=sum(____)) %>% 
+  group_by(V2) %>% 
+  summarize(sum=sum(V4)) %>% 
   rename(municipality = V2, households = sum)
 
 # check total households
@@ -75,8 +75,8 @@ sum(hh_mun$households)
 # join households to no_car dataset and calculate percentages
 hh_nocar <- hh_mun %>% inner_join(no_cars, by = "municipality") 
 hh_nocar <- hh_nocar %>% 
-  mutate(nc2020pct = _______/households*100, 
-         nc2021pct = _______/households*100)
+  mutate(nc2020pct = nc2020/households*100, 
+         nc2021pct = nc2021/households*100)
 
 ```
 
@@ -95,12 +95,18 @@ names(pop)[1] <- "Name"
 names(pop)[2] <- "Pop22"
 sum(pop$Pop22)
 
+library(raster)
+
 # load municipalities
-________
+municipalities <-  getData("GADM", country = "DNK", level = 2)
 
 # reconcile municipalities' and hh_nocars' problematic names 
+municipalities_4326 <- st_as_sf(municipalities, crs = 4326) 
 
-________
+munic <- municipalities_4326 %>% 
+  mutate(NAME_2 = gsub("Å", "Aa", NAME_2)) %>% 
+  mutate(NAME_2 = gsub("å", "aa", NAME_2)) %>% 
+  mutate(NAME_2 = gsub(" ", "", NAME_2))
 
 # join municipalities with the carless households dataset
 
@@ -133,6 +139,17 @@ Now of course, you have the whole situation in Denmark. In the next steps, you n
 
 ```{r thematic-map-Midt}
 ## YOUR CODE HERE
+
+regions <- municipalities <-  getData("GADM", country = "DNK", level = 1)
+
+regions_4326 <- st_as_sf(regions, crs = 4326)
+
+regions_central <- regions_4326 %>% 
+  filter(NAME_1 == "Midtjylland")
+
+i <- st_intersection(no_cars_pct_mun, regions_central)
+
+plot(i)
 ```
 
 Gosh, that was a ton of wrangling! But we are nearly there! :)
